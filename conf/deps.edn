@@ -1,0 +1,7 @@
+{:own []
+
+ :foreign {org.clojure/clojurescript {:mvn/version "1.10.520"}
+           re-frame                  {:mvn/version "0.10.7"}
+           cljsjs/material-ui        {:mvn/version "4.1.3-0"}
+           cljsjs/material-ui-icons  {:mvn/version "3.0.1-0"}
+           cljsjs/create-react-class {:mvn/version "15.6.3-1"}}}
