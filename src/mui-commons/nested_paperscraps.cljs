@@ -38,7 +38,9 @@
   [Paperscrap
    {}
    [:div
-    {:style {:display :flex}}
+    {:style {:display :flex
+             :flex-wrap :wrap
+             :align-items :flex-start}}
     [:div
      (component-for-value k)]
     [:div
@@ -52,7 +54,9 @@
   [Paperscrap
    {}
    [:div
-    {:style {:display :flex}}
+    {:style {:display :flex
+             :flex-wrap :wrap
+             :align-items :flex-start}}
     [:div
      {:style {:margin-right "5px"}}
      "{"]
