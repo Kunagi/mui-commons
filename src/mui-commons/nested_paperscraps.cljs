@@ -118,6 +118,16 @@
   (component-for-value data))
 
 
+(defn ExampleData
+  []
+  [Data '(hello world {:with :a
+                       :vector [:vector :items :here 1 2 3 "hello"]
+                       :set #{"x" a :b 3}
+                       :empty-vector []
+                       :empty-map {}
+                       :nil nil
+                       [:a :more "complex key" {:with :data}] :value})])
+
 ;;;
 
 ;; (defn optional-Title
