@@ -3,6 +3,7 @@
    [cljs.pprint :as pprint]
    ["@material-ui/core" :as mui]
    ["@material-ui/icons" :as icons]
+   [reagent.core :as r]
 
    [mui-commons.api :refer [<subscribe]]))
 
@@ -24,6 +25,36 @@
      [:> icons/BugReport
       {:style {:margin-right "1rem"}}]
      (into [:div] contents)]]])
+
+
+;;; DropdownMenu
+
+
+(defn DropdownMenu
+  [options & menu-items]
+  (let [!anchor-el (atom nil)
+        !open? (r/atom false)]
+    (fn [{:keys [button-text
+                 button-icon
+                 style]}
+         & menu-items]
+      [:div
+       {:style style}
+       [:> (if button-text mui/Button mui/IconButton)
+        {:color :inherit
+         :on-click #(reset! !open? true)
+         :ref #(reset! !anchor-el %)}
+        button-icon
+        button-text
+        (when button-text
+          [:> icons/ArrowDropDown])]
+       (into
+        [:> mui/Menu
+         {:open (-> @!open?)
+          :anchor-el @!anchor-el
+          :keep-mounted true
+          :on-close #(reset! !open? false)}]
+        menu-items)])))
 
 
 ;;; progress boundary
