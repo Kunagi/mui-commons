@@ -15,12 +15,28 @@
    (with-out-str (pprint/pprint data))])
 
 
+(defn ErrorCard [& contents]
+  [:> mui/Card
+   {:style {:background-color "#FFCDD2"}}
+   [:> mui/CardContent
+    [:div
+     {:style {:display :flex}}
+     [:> icons/BugReport
+      {:style {:margin-right "1rem"}}]
+     (into [:div] contents)]]])
+
+
 ;;; progress boundary
 
+(defn- resource-error? [resource]
+  (and (vector? resource)
+       (= :resource/error (first resource))))
 
 (defn DataProgressBoundary [component-f data]
   (if data
-    [component-f data]
+    (if (resource-error? data)
+      [ErrorCard [Data (-> data)]]
+      [component-f data])
     [:> mui/CircularProgress]))
 
 
