@@ -1,7 +1,8 @@
 (ns mui-commons.init
   (:require
    [cljs.reader :refer [read-string]]
-   [reagent.core :as r]))
+   [reagent.core :as r]
+   [re-frame.core :as rf]))
 
 
 (defn install-roboto-css []
@@ -19,7 +20,7 @@
 
 
 (defn set-config [config]
-  (tap> [:dbg ::config config]))
+  (rf/dispatch-sync [::set-config config]))
 
 
 (defn set-config-string [config-string]
@@ -28,3 +29,10 @@
     (-> config-string
         read-string
         set-config)))
+
+
+(rf/reg-event-db
+ ::set-config
+ (fn [db [_ config]]
+   (tap> [:dbg ::config config])
+   (merge db config)))
