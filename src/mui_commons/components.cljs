@@ -4,7 +4,7 @@
    ["@material-ui/core" :as mui]
    ["@material-ui/icons" :as icons]
 
-   [mui-commons.ui-api :refer [<subscribe]]))
+   [mui-commons.api :refer [<subscribe]]))
 
 
 (defn Data
