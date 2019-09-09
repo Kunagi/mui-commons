@@ -42,3 +42,7 @@
 
 (defn SubscriptionProgressBoundary [component-f subscription]
   [DataProgressBoundary component-f (<subscribe subscription)])
+
+
+(defn ResourceProgressBoundary [component-f resource-id]
+  [DataProgressBoundary component-f (<subscribe [resource-id])])

@@ -7,17 +7,6 @@
 (defonce !resources (atom {}))
 
 
-(defn reg-resource [{:as resource
-                     :keys [id]}]
-  (swap! !resources assoc id resource)
-  (rf/reg-sub
-   id
-   (fn [db _]
-     (get-in db [::resources id]))))
-
-
-
-
 (defn request-resource [id]
   (let [resource (-> @!resources (get id))
         url (get resource :url)]
@@ -38,8 +27,28 @@
                     :error error}]))})))
 
 
+(defn reg-resource [{:as resource
+                     :keys [id
+                            auto-load?]}]
+  (swap! !resources assoc id resource)
+  (rf/reg-sub
+   id
+   (fn [db _]
+     (get-in db [::resources id])))
+  (when auto-load?
+    (rf/dispatch [::request-resource id])))
+
+
 
 ;;; re-frame events
+
+(rf/reg-event-db
+ ::request-resource
+ (fn [db [_ id]]
+   ;;TODO use re-frame effect
+   (request-resource id)
+   db))
+
 
 (rf/reg-event-db
  ::resource-received
