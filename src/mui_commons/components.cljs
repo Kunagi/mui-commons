@@ -16,6 +16,26 @@
    (with-out-str (pprint/pprint data))])
 
 
+(defn Exception [exception]
+  (let [message (.-message exception)
+        message (if message message (str exception))
+        data (ex-data exception)
+        cause (or (ex-cause exception) (.-cause exception))]
+    [:div
+     (if cause
+       [:div
+        [Exception cause]
+        [:div
+         {:style {:margin-top "1em"}}
+         "Consequence:"]])
+     [:div
+      {:style {:font-weight :strong
+               :white-space :pre-wrap}}
+      (str message)]
+     (if-not (empty? data)
+       [Data data])]))
+
+
 (defn ErrorCard [& contents]
   [:> mui/Card
    {:style {:background-color "#FFCDD2"}}
@@ -25,6 +45,38 @@
      [:> icons/BugReport
       {:style {:margin-right "1rem"}}]
      (into [:div] contents)]]])
+
+
+(defn ExceptionCard [exception]
+  [ErrorCard
+    [:div "A bug is making trouble..."]
+    (if exception
+      [:div
+       {:style {:margin-top "1em"}}
+       [Exception exception]])])
+
+
+(defn ErrorBoundary [comp]
+  (if comp
+    (let [!exception (r/atom nil)]
+      (r/create-class
+       {:component-did-catch (fn [this cause info]
+                               (.error js/console
+                                       "ErrorBoundary"
+                                       "\nthis:" this
+                                       "\ne:" cause
+                                       "\ninfo:" info)
+                               (let [stack (.-componentStack info)
+                                     message (if stack
+                                               (.trim (str stack))
+                                               (str info))]
+                                 (reset! !exception (ex-info message
+                                                             {:component comp}
+                                                             cause))))
+        :reagent-render (fn [comp]
+                          (if-let [exception @!exception]
+                            [ExceptionCard exception]
+                            comp))}))))
 
 
 ;;; DropdownMenu
