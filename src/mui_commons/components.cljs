@@ -119,13 +119,16 @@
   (if data
     (if (resource-error? data)
       [ErrorCard [Data (-> data)]]
-      [component-f data])
+      [ErrorBoundary
+       [component-f data]])
     [:> mui/CircularProgress]))
 
 
 (defn SubscriptionProgressBoundary [component-f subscription]
   [DataProgressBoundary component-f (<subscribe subscription)])
 
+(defn AssetProgressBoundary [component-f asset-path]
+  [DataProgressBoundary component-f (<subscribe [:assets/asset asset-path])])
 
 (defn ResourceProgressBoundary [component-f resource-id]
   [DataProgressBoundary component-f (<subscribe [resource-id])])

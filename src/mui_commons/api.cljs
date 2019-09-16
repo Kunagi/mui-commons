@@ -4,6 +4,8 @@
    [re-frame.core :as rf]))
 
 (defn <subscribe [subscription]
-  @(rf/subscribe subscription))
-
-
+  (if-let [subscription (rf/subscribe subscription)]
+    @subscription
+    (do
+      (tap> [:err ::subscription-missing (first subscription)])
+      nil)))
