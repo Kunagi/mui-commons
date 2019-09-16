@@ -111,14 +111,14 @@
 
 ;;; progress boundary
 
-(defn- resource-error? [resource]
+(defn- asset-error? [resource]
   (and (vector? resource)
-       (= :resource/error (first resource))))
+       (= :asset/error (first resource))))
 
 (defn DataProgressBoundary [component-f data]
   (if data
-    (if (resource-error? data)
-      [ErrorCard [Data (-> data)]]
+    (if (= :auth/not-permitted data)
+      [ErrorCard "Access denied"]
       [ErrorBoundary
        [component-f data]])
     [:> mui/CircularProgress]))
