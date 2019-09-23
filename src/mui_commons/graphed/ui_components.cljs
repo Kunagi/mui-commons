@@ -7,46 +7,93 @@
    [mui-commons.graphed.subscriptions]))
 
 
-(def spacing "10px")
+(def spacing "5px")
 
 
 (declare !Node)
 
+(defn NodeName [text type]
+  [:div.NodeName
+   [:> mui/Typography
+    {:variant :caption
+     :style {:overflow :auto
+             :color (case type
+                      :string "#006600"
+                      :keyword "#660000"
+                      "#000000")}}
+    (str text)]])
+
+
+(defn NodeSideText [text]
+  [:div.NodeSideText
+   [:> mui/Typography
+    {:variant :caption
+     :style {:color "#aaa"
+             :margin-right spacing}}
+    (str text)]])
+
+
+(defn NodeChildren [buffer-id depth horizontal? childs]
+  (into
+   [:div.NodeChildren
+    {:style {:display :grid
+             :grid-template-columns (if horizontal?
+                                      "repeat(2, auto)")
+             :align-items :start
+             :justify-items :start
+             :grid-gap spacing}}]
+   ;;:margin-left spacing}}]
+   childs))
+
+
 
 (defn Node
-  [node]
+  [buffer-id node depth]
   [:> mui/Paper
-   {:style {:padding spacing}}
-   [:div {:style {:display :grid :grid-gap spacing}}
-    (when-let [n (-> node :graphed.node/name)]
-      [:> mui/Typography
-       {:variant :caption}
-       (str n)])
-    (when-let [child-nodes-ids (seq (-> node :graphed.node/children))]
-      (into
-       [:div {:style {:display :grid :grid-gap spacing}}]
-       (map
-        (fn [child-id]
-          [!Node child-id])
-        child-nodes-ids)))
-    [:div
-     [:hr]
-     [muic/Data node]]]])
+   {:style {:padding spacing
+            :background-color (if (even? depth) "#ffffff" "#fafafa")}}
+
+
+   ;; [:div
+   ;;  {:style {:color "#0a0"}}
+   ;;  [muic/Data node]]
+
+   [:div
+    {:style {:display :flex}}
+    (when-let [text (-> node :graphed.node/side-text)]
+      [NodeSideText text])
+    [:div {:style {:display :grid :grid-gap spacing}}
+     (when-let [text (-> node :graphed.node/name)]
+       [NodeName text (-> node :graphed.node/name-type)])
+     (when-let [childs (seq (-> node :graphed.node/childs))]
+       [NodeChildren buffer-id (inc depth) (-> node :graphed.node/horizontal?)
+        (mapv
+         (fn [child]
+           [Node buffer-id child depth])
+         childs)])
+     (when-let [childs-ids (seq (-> node :graphed.node/childs-ids))]
+       [NodeChildren buffer-id (inc depth) (-> node :graphed.node/horizontal?)
+        (mapv
+         (fn [child-id]
+           [!Node buffer-id child-id depth])
+         childs-ids)])]]])
 
 
 (defn !Node
-  [node-id]
-  (let [node @(rf/subscribe [:graphed/node node-id])]
+  [buffer-id node-id depth]
+  (let [node @(rf/subscribe [:graphed/buffers-node buffer-id node-id])]
     (if node
-      [Node node]
-      [:div
-       {:style {:background :red}}
-       "Missing Node: " (str node-id)])))
+      [muic/ErrorBoundary
+       [Node buffer-id node depth]]
+      [muic/ErrorCard
+       "Missing Node: " (pr-str node-id)])))
 
 
-(defn Navigator
-  []
+(defn Buffer [buffer-id]
   [:div
-   [:h3 "Tree Navigator"]
-   [!Node @(rf/subscribe [:graphed/focused-node-id])]
-   [:hr]])
+   [:h3 "GraphEd Buffer " (pr-str buffer-id)]
+   (if-let [root-node-id @(rf/subscribe [:graphed/buffers-root-node-id buffer-id])]
+     [muic/ErrorBoundary
+      [!Node buffer-id root-node-id 0]]
+     [muic/ErrorCard
+      "Missing buffer: " (pr-str buffer-id)])])

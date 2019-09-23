@@ -2,16 +2,22 @@
   (:require
    [re-frame.core :as rf]
 
-   [mui-commons.graphed.api :as graphed]))
+   [mui-commons.graphed.api :as graphed]
+   [mui-commons.graphed.data-view :as data-view]))
 
 
 (rf/reg-sub
- :graphed/focused-node-id
- (fn [db _]
-   ((-> graphed/!config deref :f-initial-focused-node-id) db)))
+ :graphed/buffers-root-node-id
+ (fn [db [_ buffer-id]]
+   (when-let [buffer (-> db :graphed :buffers (get buffer-id))]
+      (graphed/buffers-root-node-id buffer))))
 
 
 (rf/reg-sub
- :graphed/node
- (fn [db [_ node-id]]
-   ((-> graphed/!config deref :f-node-by-id) db node-id)))
+ :graphed/buffers-node
+ (fn [db [_ buffer-id node-id]]
+   (tap> [:!!! ::buffers-node {:buffer-id buffer-id
+                               :node-id node-id
+                               :db (-> db :graphed)}])
+   (when-let [buffer (-> db :graphed :buffers (get buffer-id))]
+     (graphed/buffers-node buffer node-id))))
