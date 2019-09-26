@@ -115,20 +115,18 @@
   (and (vector? resource)
        (= :asset/error (first resource))))
 
-(defn DataProgressBoundary [component-f data]
+(defn DataProgressBoundary [data component]
   (if data
     (if (= :auth/not-permitted data)
       [ErrorCard "Access denied"]
       [ErrorBoundary
-       [component-f data]])
+       (if (fn? component)
+         [component data]
+         (conj component data))])
     [:> mui/CircularProgress]))
 
 
-(defn SubscriptionProgressBoundary [component-f subscription]
-  [DataProgressBoundary component-f (<subscribe subscription)])
-
-(defn AssetProgressBoundary [component-f asset-path]
-  [DataProgressBoundary component-f (<subscribe [:assets/asset asset-path])])
-
-(defn ResourceProgressBoundary [component-f resource-id]
-  [DataProgressBoundary component-f (<subscribe [resource-id])])
+(defn SubscriptionProgressBoundary [subscription component]
+  [DataProgressBoundary
+   (<subscribe subscription)
+   component])
