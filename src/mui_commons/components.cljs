@@ -1,11 +1,25 @@
 (ns mui-commons.components
   (:require
    [cljs.pprint :as pprint]
+   [reagent.core :as r]
    ["@material-ui/core" :as mui]
    ["@material-ui/icons" :as icons]
-   [reagent.core :as r]
+   ["@material-ui/core/styles" :refer [withStyles]]
 
    [mui-commons.api :refer [<subscribe]]))
+
+
+(defn with-css [css component]
+  [:> ((withStyles (fn [theme]
+                     (clj->js {:root
+                               (if (fn? css)
+                                 (css theme)
+                                 css)})))
+       (r/reactify-component
+        (fn [{:keys [classes ] :as props}]
+          [:div
+           {:class (.-root classes)}
+           component])))])
 
 
 (defn Data

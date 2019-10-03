@@ -1,11 +1,8 @@
 (ns mui-commons.init
   (:require
-   [clojure.reader :refer [read-string]]
-   [reagent.core :as r]
-   [re-frame.core :as rf]))
+   [reagent.core :as r]))
 
-;;; TODO move to startup
-
+;;; TODO move to startup or desktop
 (defn install-roboto-css []
   (let [head (.-head js/document)
         link (.createElement js/document "link")]
