@@ -149,7 +149,7 @@
 ;;; Accordion from mui/ExpansionPanel
 
 
-(defn AccordionExpansionPanel [!expanded id item summary-f details-f]
+(defn- AccordionExpansionPanel [!expanded id item summary-f details-f]
   (let [expanded? (= id @!expanded)]
     [:> mui/ExpansionPanel
      {:expanded expanded?
@@ -173,4 +173,31 @@
         items)))))
 
 
-;;;
+;;; ExpansionPanels mui/ExpansionPanel
+
+
+(defn- ExpansionPanel [!expandeds id item summary-f details-f]
+  (let [expanded? (contains? @!expandeds id)]
+    [:> mui/ExpansionPanel
+     {:expanded expanded?
+      :on-change (fn [_ expanded?] (swap! !expandeds (fn [expandeds]
+                                                       (if expanded?
+                                                         (conj expandeds id)
+                                                         (disj expandeds id)))))}
+     [:> mui/ExpansionPanelSummary
+      [:span
+       (summary-f item)]]
+     (when expanded?
+       [:> mui/ExpansionPanelSummary
+        (details-f item)])]))
+
+
+(defn ExpansionPanels [items summary-f details-f]
+  (let [!expanded (r/atom #{})]
+    (fn [items summary-f details-f]
+      (into
+       [:div.Accordion]
+       (map-indexed
+        (fn [idx item]
+          [AccordionExpansionPanel !expanded idx item summary-f details-f])
+        items)))))
