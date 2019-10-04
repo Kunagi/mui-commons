@@ -199,5 +199,5 @@
        [:div.Accordion]
        (map-indexed
         (fn [idx item]
-          [AccordionExpansionPanel !expanded idx item summary-f details-f])
+          [ExpansionPanel !expanded idx item summary-f details-f])
         items)))))
