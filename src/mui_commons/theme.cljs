@@ -1,7 +1,7 @@
 (ns mui-commons.theme
   (:require
    [goog.object :as gobj]
-   ["@material-ui/core/styles" :refer [createMuiTheme withStyles]]
+   ["@material-ui/core/styles" :refer [createMuiTheme]]
    ["@material-ui/core/colors" :as mui-colors]))
 
 
