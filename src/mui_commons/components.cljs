@@ -6,6 +6,7 @@
    ["@material-ui/icons" :as icons]
    ["@material-ui/core/styles" :refer [withStyles]]
 
+   [mui-commons.theme :as theme]
    [mui-commons.api :refer [<subscribe]]))
 
 
@@ -201,3 +202,21 @@
         (fn [idx item]
           [ExpansionPanel !expanded idx item summary-f details-f])
         items)))))
+
+
+;;; dialogs
+
+(defn ClosableDialog [!open? title content]
+  [:> mui/Dialog
+   {:open @!open?
+    :on-close #(reset! !open? false)}
+   [:> mui/DialogTitle
+    title
+    [:> mui/IconButton
+     {:on-click #(reset! !open? false)
+      :style {:position :absolute
+              :right (theme/spacing)
+              :top (theme/spacing)}}
+     [:> icons/Close]]]
+   [:> mui/DialogContent
+    content]])
