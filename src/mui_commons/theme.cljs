@@ -30,3 +30,12 @@
 
 (defn set-theme! [theme]
   (reset! !theme (theme->mui-theme theme)))
+
+
+;;; helpers
+
+(defn spacing
+  ([]
+   (spacing 1))
+  ([factor]
+   (-> (theme) (.spacing factor))))
