@@ -23,6 +23,11 @@
            component])))])
 
 
+(defn HTML [html-code]
+  [:span
+   {:dangerouslySetInnerHTML {:__html html-code}}])
+
+
 (defn Data
   [data]
   [:code
