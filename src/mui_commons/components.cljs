@@ -10,6 +10,14 @@
    [mui-commons.api :refer [<subscribe]]))
 
 
+(defn- deep-merge [& maps]
+  (apply merge-with (fn [& args]
+                      (if (every? map? args)
+                        (apply deep-merge args)
+                        (last args)))
+         maps))
+
+
 (defn with-css [css component]
   [:> ((withStyles (fn [theme]
                      (clj->js {:root
@@ -34,6 +42,20 @@
    {:style {:white-space :pre-wrap
             :overflow :auto}}
    (with-out-str (pprint/pprint data))])
+
+
+(defn ForeignLink
+  [options & contents]
+  (into
+   [:> mui/Link
+    (deep-merge
+     {:target :_blank
+      :rel :noopener
+      :color :inherit}
+     options)]
+   (if (empty? contents)
+     [(get options :href)]
+     contents)))
 
 
 (defn Exception [exception]
