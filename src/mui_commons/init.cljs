@@ -2,14 +2,27 @@
   (:require
    [reagent.core :as r]))
 
-;;; TODO move to startup or desktop
-(defn install-roboto-css []
+
+(defn install-css [css]
   (let [head (.-head js/document)
-        link (.createElement js/document "link")]
+        style (.createElement js/document "style")
+        text-node (.createTextNode js/document css)]
+    (.appendChild style text-node);
+    (.appendChild head style)))
+
+
+(defn install-google-font [font]
+  (let [head (.-head js/document)
+        link (.createElement js/document "link")
+        url (str "https://fonts.googleapis.com/css?family=" font)]
     (set! (.-type link) "text/css")
     (set! (.-rel link) "stylesheet")
-    (set! (.-href link) "https://fonts.googleapis.com/css?family=Roboto:300,400,500")
+    (set! (.-href link) url)
     (.appendChild head link)))
+
+
+(defn install-roboto-css []
+  (install-google-font "Roboto:300,400,500"))
 
 
 (defn mount-app

@@ -44,20 +44,6 @@
    (with-out-str (pprint/pprint data))])
 
 
-(defn ForeignLink
-  [options & contents]
-  (into
-   [:> mui/Link
-    (deep-merge
-     {:target :_blank
-      :rel :noopener
-      :color :inherit}
-     options)]
-   (if (empty? contents)
-     [(get options :href)]
-     contents)))
-
-
 (defn Exception [exception]
   (let [message (.-message exception)
         message (if message message (str exception))
@@ -119,6 +105,69 @@
                           (if-let [exception @!exception]
                             [ExceptionCard exception]
                             comp))}))))
+
+
+;;; simple helper components
+
+(defn ForeignLink
+  [options & contents]
+  (into
+   [:> mui/Link
+    (deep-merge
+     {:target :_blank
+      :rel :noopener
+      :color :inherit}
+     options)]
+   (if (empty? contents)
+     [(get options :href)]
+     contents)))
+
+
+(defn destructure-args [args]
+  (if (empty? args)
+    [nil nil]
+    (let [options (first args)]
+      (if (map? options)
+        [options (rest args)]
+        [nil args]))))
+
+
+(defn Card [& args]
+  (let [[options childs] (destructure-args args)
+        title (-> options :title)
+        padding (or (-> options :style :padding)
+                    (theme/spacing 2))
+        options (assoc-in options [:style :padding] padding)]
+    (into
+     [:> mui/Paper
+      options
+      (when title
+        [:div.title
+         {:style {:font-weight :bold}}
+         title])]
+     childs)))
+
+
+(defn Column [& args]
+  (let [[options elements] (destructure-args args)
+        style (or (-> options :style) {})
+        grid-gap (or (-> style :grid-gap) (theme/spacing 1))
+        style (assoc style
+                     :display :grid
+                     :grid-gap grid-gap)
+        options (assoc options :style style)
+        items (-> options :items)
+        template (-> options :template)]
+    (into
+     [:div
+      options]
+     (concat
+      elements
+      (map
+       (fn [item]
+         (conj template item))
+       items)))))
+
 
 
 ;;; DropdownMenu
@@ -229,6 +278,34 @@
         (fn [idx item]
           [ExpansionPanel !expanded idx item summary-f details-f])
         items)))))
+
+
+;;; Table
+
+(defn Table [{:keys [data cols]}]
+  [:> mui/Table
+   [:> mui/TableHead
+    (into
+     [:> mui/TableRow]
+     (map
+      (fn [col]
+        [:> mui/TableCell
+         (-> col :head-text)])
+      cols))]
+   (into
+    [:> mui/TableBody]
+    (map
+     (fn [record]
+       (into
+        [:> mui/TableRow]
+         ;; [:> mui/TableCell
+         ;;  [Data cols]]]))
+        (map
+         (fn [col]
+           [:> mui/TableCell
+            ((-> col :value) record)])
+         cols)))
+     data))])
 
 
 ;;; dialogs
