@@ -44,11 +44,15 @@
    (with-out-str (pprint/pprint data))])
 
 
+(defn None []
+  [:div {:style {:display :none}}])
+
+
 (defn Exception [exception]
   (let [message (.-message exception)
         message (if message message (str exception))
         data (ex-data exception)
-        cause (or (ex-cause exception) (.-cause exception))]
+        cause (or (ex-cause exception) (.-cause ^js exception))]
     [:div
      (if cause
        [:div
@@ -66,7 +70,8 @@
 
 (defn ErrorCard [& contents]
   [:> mui/Card
-   {:style {:background-color "#FFCDD2"}}
+   {:style {:background-color "#b71c1c" ; red 900
+            :color "#ffffff"}}
    [:> mui/CardContent
     [:div
      {:style {:display :flex}}
@@ -174,7 +179,7 @@
 
 
 (defn DropdownMenu
-  [options & menu-items]
+  [options menu-items-f]
   (let [!anchor-el (atom nil)
         !open? (r/atom false)]
     (fn [{:keys [button-text
@@ -197,7 +202,7 @@
           :anchor-el @!anchor-el
           :keep-mounted true
           :on-close #(reset! !open? false)}]
-        menu-items)])))
+        (menu-items-f #(reset! !open? false)))])))
 
 
 ;;; progress boundary
@@ -206,7 +211,7 @@
   (and (vector? resource)
        (= :asset/error (first resource))))
 
-(defn DataProgressBoundary [data component]
+(defn DataProgressBoundary [data component height]
   (if data
     (if (= :auth/not-permitted data)
       [ErrorCard "Access denied"]
@@ -214,13 +219,19 @@
        (if (fn? component)
          [component data]
          (conj component data))])
-    [:> mui/CircularProgress]))
+    [:div
+     {:style {:display :grid
+              :justify-content :center
+              :align-content :center
+              :min-height (when height height)}}
+     [:> mui/CircularProgress]]))
 
 
-(defn SubscriptionProgressBoundary [subscription component]
+(defn SubscriptionProgressBoundary [subscription component height]
   [DataProgressBoundary
    (<subscribe subscription)
-   component])
+   component
+   height])
 
 
 ;;; Accordion from mui/ExpansionPanel
