@@ -90,7 +90,8 @@
 
 
 (defn ErrorBoundary [comp]
-  (if comp
+  (if-not comp
+    [:span]
     (let [!exception (r/atom nil)]
       (r/create-class
        {:component-did-catch (fn [this cause info]
@@ -128,17 +129,19 @@
      contents)))
 
 
-(defn destructure-args [args]
+(defn destructure-optmap+elements [args]
   (if (empty? args)
-    [nil nil]
+    nil
     (let [options (first args)]
       (if (map? options)
-        [options (rest args)]
-        [nil args]))))
+        (update options :elements #(if %
+                                     (into % (rest args))
+                                     (rest args)))
+        {:elements args}))))
 
 
 (defn Card [& args]
-  (let [[options childs] (destructure-args args)
+  (let [options (destructure-optmap+elements args)
         title (-> options :title)
         padding (or (-> options :style :padding)
                     (theme/spacing 2))
@@ -150,29 +153,78 @@
         [:div.title
          {:style {:font-weight :bold}}
          title])]
-     childs)))
+     (-> options :elements))))
 
 
-(defn Column [& args]
-  (let [[options elements] (destructure-args args)
-        style (or (-> options :style) {})
-        grid-gap (or (-> style :grid-gap) (theme/spacing 1))
-        style (assoc style
-                     :display :grid
-                     :grid-gap grid-gap)
-        options (assoc options :style style)
-        items (-> options :items)
-        template (-> options :template)]
+;;; Text
+
+(defn Text [& optmap+elements]
+  (let [options (destructure-optmap+elements optmap+elements)
+        {:keys [elements
+                size]} options]
     (into
-     [:div
-      options]
-     (concat
-      elements
-      (map
-       (fn [item]
-         (conj template item))
-       items)))))
+     [:div.Text]
 
+     elements)))
+
+;;; Layouts
+
+
+(defn Stack [& optmap+elements]
+  (let [options (destructure-optmap+elements optmap+elements)
+        {:keys [spacing
+                elements
+                items
+                template]} options
+        spacing (or spacing
+                    (theme/spacing 0.5))
+        elements (if-not items
+                   elements
+                   (concat elements
+                           (let [item-template (or template [:span])]
+                             (map #(conj item-template %) items))))]
+    (into
+     [:div.Stack
+      {:style {:display :grid
+               :grid-gap spacing}}]
+     elements)))
+
+
+(defn Inline [& optmap+elements]
+  (let [options (destructure-optmap+elements optmap+elements)
+        {:keys [spacing
+                elements
+                items
+                template]} options
+        spacing (or spacing
+                    (theme/spacing 0.5))
+        elements (if-not items
+                   elements
+                   (concat elements
+                           (let [item-template (or template [:span])]
+                             (map #(conj item-template %) items))))]
+    (into
+     [:div.Inline
+      {:style {:display :flex
+               :flex-wrap :wrap
+               :margin (str "-" spacing "px")}}]
+     (map
+      (fn [element]
+        [:div
+         {:style {:margin (str spacing "px")}}
+         element])
+      elements))))
+
+
+(defn TitledInline [& optmap+elements]
+  (let [options (destructure-optmap+elements optmap+elements)
+        {:keys [title
+                stack-options
+                title-options]} options]
+    [Stack
+     stack-options
+     [Text title-options title]
+     [Inline (dissoc options :title :stack-options :title-options)]]))
 
 
 ;;; DropdownMenu
@@ -290,6 +342,34 @@
           [ExpansionPanel !expanded idx item summary-f details-f])
         items)))))
 
+
+;;; width aware wrapper
+
+(defn WrapWidthAware [width-aware-component]
+  (let [!width (r/atom nil)]
+    (r/create-class
+     {:reagent-render
+      (fn [] (conj width-aware-component @!width))
+      :component-did-mount
+      #(let [node (-> % r/dom-node)
+             width (.-offsetWidth node)]
+         (when-not (= width @!width)
+           (reset! !width width))
+         (-> (js/ResizeObserver. (fn []
+                                   (let [width (.-offsetWidth node)]
+                                     (when-not (= width @!width)
+                                       (reset! !width width)))))
+             (.observe node)))})))
+
+
+(defn WidthAwareBreakepointsWrapper [breakepoints width-aware-component width]
+  (conj
+   width-aware-component
+   (reduce
+    (fn [ret breakepoint]
+      (if (>= width breakepoint) breakepoint ret))
+    0
+    breakepoints)))
 
 ;;; Table
 
