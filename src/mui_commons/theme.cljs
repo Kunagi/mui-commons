@@ -38,4 +38,6 @@
   ([]
    (spacing 1))
   ([factor]
-   (-> (theme) (.spacing factor))))
+   (-> (theme) (.spacing factor)))
+  ([t r b l]
+   (-> (theme) (.spacing t r b l))))
