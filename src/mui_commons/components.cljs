@@ -54,17 +54,22 @@
         data (ex-data exception)
         cause (or (ex-cause exception) (.-cause ^js exception))]
     [:div
-     (if cause
+     (when cause
        [:div
         [Exception cause]
         [:div
-         {:style {:margin-top "1em"}}
-         "Consequence:"]])
+         {:style {:margin "1rem 0"
+                  :color :lightgrey
+                  :font-style :italic}}
+         "causes"]])
+     [:> mui/Card
+      (js/console.log exception)
+      [Data (-> exception)]]
      [:div
       {:style {:font-weight :strong
                :white-space :pre-wrap}}
       (str message)]
-     (if-not (empty? data)
+     (when-not (empty? data)
        [Data data])]))
 
 
@@ -82,11 +87,11 @@
 
 (defn ExceptionCard [exception]
   [ErrorCard
-    [:div "A bug is making trouble..."]
     (if exception
       [:div
-       {:style {:margin-top "1em"}}
-       [Exception exception]])])
+       {:style {:margin "1em"}}
+       [Exception exception]]
+      [:div "A bug is making trouble :-("])])
 
 
 (defn ErrorBoundary [comp]
@@ -94,19 +99,20 @@
     [:span]
     (let [!exception (r/atom nil)]
       (r/create-class
-       {:component-did-catch (fn [this cause info]
-                               (.error js/console
-                                       "ErrorBoundary"
-                                       "\nthis:" this
-                                       "\ne:" cause
-                                       "\ninfo:" info)
-                               (let [stack (.-componentStack info)
-                                     message (if stack
-                                               (.trim (str stack))
-                                               (str info))]
-                                 (reset! !exception (ex-info message
-                                                             {:component comp}
-                                                             cause))))
+       {:component-did-catch
+        (fn [this ex info]
+          (let [comp-name (-> comp first .-cljsReactClass .-displayName)]
+            (js/console.log
+             "ErrorBoundary"
+             "\nthis:" this
+             "\ncomp" comp
+             "\ncomp-name" comp-name
+             "\nex:" ex
+             "\ninfo:" info)
+            (reset! !exception (ex-info (str "Broken component: " comp-name)
+                                        {:component comp
+                                         :info info}
+                                        ex))))
         :reagent-render (fn [comp]
                           (if-let [exception @!exception]
                             [ExceptionCard exception]
@@ -355,11 +361,12 @@
              width (.-offsetWidth node)]
          (when-not (= width @!width)
            (reset! !width width))
-         (-> (js/ResizeObserver. (fn []
-                                   (let [width (.-offsetWidth node)]
-                                     (when-not (= width @!width)
-                                       (reset! !width width)))))
-             (.observe node)))})))
+         (when (exists? js/ResizeObserver)
+           (-> (js/ResizeObserver. (fn []
+                                     (let [width (.-offsetWidth node)]
+                                       (when-not (= width @!width)
+                                         (reset! !width width)))))
+               (.observe node))))})))
 
 
 (defn WidthAwareBreakepointsWrapper [breakepoints width-aware-component width]
