@@ -151,7 +151,9 @@
         title (-> options :title)
         padding (or (-> options :style :padding)
                     (theme/spacing 2))
-        options (assoc-in options [:style :padding] padding)]
+        options (assoc-in options [:style :padding] padding)
+        elements (-> options :elements)
+        options (dissoc options :elements)]
     (into
      [:> mui/Paper
       options
@@ -159,7 +161,7 @@
         [:div.title
          {:style {:font-weight :bold}}
          title])]
-     (-> options :elements))))
+     elements)))
 
 
 ;;; Text
@@ -192,6 +194,7 @@
     (into
      [:div.Stack
       {:style {:display :grid
+               :grid-template-columns "100%"
                :grid-gap spacing}}]
      elements)))
 
