@@ -154,16 +154,14 @@
         options (assoc-in options [:style :padding] padding)
         elements (-> options :elements)
         options (dissoc options :elements)]
-    [:> mui/Paper
-     options
      (into
-      [:div
-       {:style {:overflow-x :auto}}
+      [:> mui/Paper
+       options
        (when title
          [:div.title
           {:style {:font-weight :bold}}
           title])]
-      elements)]))
+      elements)))
 
 
 ;;; Text
