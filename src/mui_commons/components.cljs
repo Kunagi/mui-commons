@@ -62,9 +62,9 @@
                   :color :lightgrey
                   :font-style :italic}}
          "causes"]])
-     [:> mui/Card
-      (js/console.log exception)
-      [Data (-> exception)]]
+     ;; [:> mui/Card
+     ;;  (js/console.log exception)
+     ;;  [Data (-> exception)]]
      [:div
       {:style {:font-weight :strong
                :white-space :pre-wrap}}
