@@ -121,6 +121,7 @@
 
 ;;; simple helper components
 
+
 (defn ForeignLink
   [options & contents]
   (into
@@ -144,6 +145,25 @@
                                      (into % (rest args))
                                      (rest args)))
         {:elements args}))))
+
+
+(defn Focusable [& args]
+  (let [!id (r/atom (str "focusable_" (random-uuid)))]
+    (r/create-class
+     {:reagent-render
+      (fn [& args]
+        (let [options  (destructure-optmap+elements args)
+              elements (-> options :elements)
+              options  (dissoc options :elements)]
+          (into
+           [:div.Focusable
+            (assoc options
+                   :id @!id
+                   :tabIndex 1)]
+           elements)))
+
+      :component-did-mount
+      #(-> (js/document.getElementById @!id) .focus)})))
 
 
 (defn Card [& args]
