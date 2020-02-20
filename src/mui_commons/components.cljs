@@ -147,6 +147,20 @@
         {:elements args}))))
 
 
+(defn ScrollTo [{:keys [offset]} content]
+  (let [!id (r/atom (str "scroll_" (random-uuid)))]
+    (r/create-class
+     {:reagent-render
+      (fn [offset content]
+        [:div {:id @!id}
+         content])
+      :component-did-mount
+      (fn []
+        (-> (js/document.getElementById @!id) .scrollIntoView)
+        (when offset
+          (-> (js/scrollBy 0 (- 0 offset)))))})))
+
+
 (defn Focusable [& args]
   (let [!id (r/atom (str "focusable_" (random-uuid)))]
     (r/create-class
@@ -204,6 +218,7 @@
                 elements
                 items
                 template]} options
+        options (dissoc options :spacing :elements :items :template)
         spacing (or spacing
                     (theme/spacing 0.5))
         elements (if-not items
@@ -213,9 +228,10 @@
                              (map #(conj item-template %) items))))]
     (into
      [:div.Stack
-      {:style {:display :grid
-               :grid-template-columns "100%"
-               :grid-gap spacing}}]
+      (deep-merge options
+                  {:style {:display :grid
+                           :grid-template-columns "100%"
+                           :grid-gap spacing}})]
      elements)))
 
 
