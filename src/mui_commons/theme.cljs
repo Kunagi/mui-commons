@@ -29,7 +29,10 @@
 
 
 (defn set-theme! [theme]
-  (reset! !theme (theme->mui-theme theme)))
+  (reset! !theme (theme->mui-theme theme))
+  ;; (js/console.log "THEME:" (-> theme :palette)))
+  (when-let [background-color (-> theme :palette :background :default)]
+    (set! (.-backgroundColor (-> js/document.body.style)) background-color)))
 
 
 ;;; helpers
@@ -41,3 +44,18 @@
    (-> (theme) (.spacing factor)))
   ([t r b l]
    (-> (theme) (.spacing t r b l))))
+
+(defn color-background []
+  (-> @!theme .-palette .-background))
+
+(defn color-primary-main []
+  (-> @!theme .-palette .-primary .-main))
+
+(defn color-primary-contrast []
+  (-> @!theme .-palette .-primary .-contrastText))
+
+(defn color-secondary-main []
+  (-> @!theme .-palette .-secondary .-main))
+
+(defn color-secondary-contrast []
+  (-> @!theme .-palette .-secondary .-contrastText))
