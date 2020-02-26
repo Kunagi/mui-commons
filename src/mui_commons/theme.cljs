@@ -45,8 +45,8 @@
   ([t r b l]
    (-> (theme) (.spacing t r b l))))
 
-(defn color-background []
-  (-> @!theme .-palette .-background))
+(defn color-background-default []
+  (-> @!theme .-palette .-background .-default))
 
 (defn color-primary-main []
   (-> @!theme .-palette .-primary .-main))

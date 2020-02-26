@@ -250,9 +250,12 @@
                              (map #(conj item-template %) items))))]
     (into
      [:div.Inline
-      {:style {:display :flex
-               :flex-wrap :wrap
-               :margin (str "-" spacing "px")}}]
+      (deep-merge
+       (dissoc options :elements :spacing :items :template)
+       options
+       {:style {:display :flex
+                :flex-wrap :wrap
+                :margin (str "-" spacing "px")}})]
      (map
       (fn [element]
         [:div
