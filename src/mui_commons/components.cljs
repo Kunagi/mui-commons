@@ -32,7 +32,7 @@
 
 
 (defn HTML [html-code]
-  [:span
+  [:div.HTML
    {:dangerouslySetInnerHTML {:__html html-code}}])
 
 
