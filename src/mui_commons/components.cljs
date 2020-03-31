@@ -136,7 +136,7 @@
      contents)))
 
 
-(defn destructure-optmap+elements [args]
+(defn args-as-options [args]
   (if (empty? args)
     nil
     (let [options (first args)]
@@ -166,7 +166,7 @@
     (r/create-class
      {:reagent-render
       (fn [& args]
-        (let [options  (destructure-optmap+elements args)
+        (let [options  (args-as-options args)
               elements (-> options :elements)
               options  (dissoc options :elements)]
           (into
@@ -180,28 +180,10 @@
       #(-> (js/document.getElementById @!id) .focus)})))
 
 
-(defn Card [& args]
-  (let [options (destructure-optmap+elements args)
-        title (-> options :title)
-        padding (or (-> options :style :padding)
-                    (theme/spacing 2))
-        options (assoc-in options [:style :padding] padding)
-        elements (-> options :elements)
-        options (dissoc options :elements)]
-     (into
-      [:> mui/Paper
-       options
-       (when title
-         [:div.title
-          {:style {:font-weight :bold}}
-          title])]
-      elements)))
-
-
 ;;; Text
 
 (defn Text [& optmap+elements]
-  (let [options (destructure-optmap+elements optmap+elements)
+  (let [options (args-as-options optmap+elements)
         {:keys [elements
                 size]} options]
     (into
@@ -213,7 +195,7 @@
 
 
 (defn Stack [& optmap+elements]
-  (let [options (destructure-optmap+elements optmap+elements)
+  (let [options (args-as-options optmap+elements)
         {:keys [spacing
                 elements
                 items
@@ -234,9 +216,13 @@
                            :grid-gap spacing}})]
      elements)))
 
+(defn Stack-1 [& elements]
+  (Stack {:spacing (theme/spacing 1)
+          :elements elements}))
+
 
 (defn Inline [& optmap+elements]
-  (let [options (destructure-optmap+elements optmap+elements)
+  (let [options (args-as-options optmap+elements)
         {:keys [spacing
                 elements
                 items
@@ -265,7 +251,7 @@
 
 
 (defn TitledInline [& optmap+elements]
-  (let [options (destructure-optmap+elements optmap+elements)
+  (let [options (args-as-options optmap+elements)
         {:keys [title
                 stack-options
                 title-options]} options]
@@ -273,6 +259,41 @@
      stack-options
      [Text title-options title]
      [Inline (dissoc options :title :stack-options :title-options)]]))
+
+
+;;; Cards
+
+
+(defn Card [& args]
+  (let [options (args-as-options args)
+        title (-> options :title)
+        padding (or (-> options :style :padding)
+                    (theme/spacing 2))
+        options (assoc-in options [:style :padding] padding)
+        elements (-> options :elements)
+        options (dissoc options :elements)
+        spacing (get options :spacing)
+        options (dissoc options :spacing)]
+    [:> mui/Paper
+     options
+     (when title
+       [:div.title
+        {:style {:font-weight :bold}}
+        title])
+     (into
+      [Stack
+       {:spacing spacing}]
+      elements)]))
+
+
+(defn ActionCard
+  [options & children]
+  [:> mui/Card
+   [:> mui/CardActionArea
+    (select-keys options [:href :on-click])
+    (into
+     [:> mui/CardContent]
+     children)]])
 
 
 ;;; DropdownMenu
@@ -446,6 +467,11 @@
             ((-> col :value) record)])
          cols)))
      data))])
+
+
+;;; Tabs
+
+
 
 
 ;;; dialogs
