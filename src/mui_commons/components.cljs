@@ -52,7 +52,8 @@
   (let [message (.-message exception)
         message (if message message (str exception))
         data (ex-data exception)
-        cause (or (ex-cause exception) (.-cause ^js exception))]
+        cause (or (ex-cause exception) (.-cause ^js exception))
+        stack (.-stack exception)]
     [:div
      (when cause
        [:div
@@ -69,8 +70,27 @@
       {:style {:font-weight :strong
                :white-space :pre-wrap}}
       (str message)]
+     (when stack
+       [:div
+        {:style {:font-family :monospace
+                 :white-space :pre-wrap
+                 :padding "1rem 0"}}
+        (if (-> stack (.startsWith "\n"))
+          (-> stack (.substring 1))
+          stack)])
      (when-not (empty? data)
-       [Data data])]))
+       (if (= ::error-boundary (-> data :error-type))
+         [:div
+          (when-let [stack (get-in data [:info "componentStack"])]
+            [:div
+             {:style {:font-family :monospace
+                      :white-space :pre-wrap
+                      :padding "1rem 0"}}
+             (if (-> stack (.startsWith "\n"))
+               (-> stack (.substring 1))
+               stack)])
+          [Data (update data :info :dissoc "componentStack")]]
+         [Data data]))]))
 
 
 (defn ErrorCard [& contents]
@@ -101,7 +121,10 @@
       (r/create-class
        {:component-did-catch
         (fn [this ex info]
-          (let [comp-name (-> comp first .-cljsReactClass .-displayName)]
+          (let [cljs-react-class (-> comp first .-cljsReactClass)
+                comp-name (if cljs-react-class
+                            (-> cljs-react-class .-displayName)
+                            "no-name")]
             (js/console.log
              "ErrorBoundary"
              "\nthis:" this
@@ -110,8 +133,10 @@
              "\nex:" ex
              "\ninfo:" info)
             (reset! !exception (ex-info (str "Broken component: " comp-name)
-                                        {:component comp
-                                         :info info}
+                                        {:error-type ::error-boundary
+                                         :component comp
+                                         :info (js->clj info)
+                                         :react-class cljs-react-class}
                                         ex))))
         :reagent-render (fn [comp]
                           (if-let [exception @!exception]
