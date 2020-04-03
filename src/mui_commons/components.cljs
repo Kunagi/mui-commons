@@ -7,7 +7,8 @@
    ["@material-ui/core/styles" :refer [withStyles]]
 
    [mui-commons.theme :as theme]
-   [mui-commons.api :refer [<subscribe]]))
+   [mui-commons.api :refer [<subscribe]]
+   [clojure.string :as str]))
 
 
 (defn- deep-merge [& maps]
@@ -48,6 +49,34 @@
   [:div {:style {:display :none}}])
 
 
+(defn- stack->hiccup [stack]
+  (reduce (fn [div line]
+            (conj div
+                  [:div
+                   {:style {:color (when (or
+                                          (-> line
+                                              (str/includes? "cljs.core.js"))
+                                          (-> line
+                                              (str/includes? "react_dom_development.js"))
+                                          (-> line
+                                              (str/includes? "reagent.impl.component.js")))
+                                     "#aaa")}}
+                   line]))
+          [:div]
+          (-> stack (.split "\n"))))
+
+(defn StackTrace [stack]
+  (when stack
+    [:div
+     {:style {:font-family :monospace
+              :white-space :pre-wrap
+              :padding "1rem 0"}}
+     (stack->hiccup
+      (if (-> stack (.startsWith "\n"))
+        (-> stack (.substring 1))
+        stack))]))
+
+
 (defn Exception [exception]
   (let [message (.-message exception)
         message (if message message (str exception))
@@ -67,28 +96,13 @@
      ;;  (js/console.log exception)
      ;;  [Data (-> exception)]]
      [:div
-      {:style {:font-weight :strong
-               :white-space :pre-wrap}}
+      {:style {:font-weight :bold}}
       (str message)]
-     (when stack
-       [:div
-        {:style {:font-family :monospace
-                 :white-space :pre-wrap
-                 :padding "1rem 0"}}
-        (if (-> stack (.startsWith "\n"))
-          (-> stack (.substring 1))
-          stack)])
+     [StackTrace stack]
      (when-not (empty? data)
        (if (= ::error-boundary (-> data :error-type))
          [:div
-          (when-let [stack (get-in data [:info "componentStack"])]
-            [:div
-             {:style {:font-family :monospace
-                      :white-space :pre-wrap
-                      :padding "1rem 0"}}
-             (if (-> stack (.startsWith "\n"))
-               (-> stack (.substring 1))
-               stack)])
+          [StackTrace (get-in data [:info "componentStack"])]
           [Data (update data :info :dissoc "componentStack")]]
          [Data data]))]))
 
@@ -99,7 +113,8 @@
             :color "#ffffff"}}
    [:> mui/CardContent
     [:div
-     {:style {:display :flex}}
+     {:style {:display :flex
+              :overflow-x :auto}}
      [:> icons/BugReport
       {:style {:margin-right "1rem"}}]
      (into [:div] contents)]]])
