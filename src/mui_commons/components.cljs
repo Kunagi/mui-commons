@@ -83,7 +83,7 @@
         data (ex-data exception)
         cause (or (ex-cause exception) (.-cause ^js exception))
         stack (.-stack exception)]
-    [:div
+    [:div.Exception
      (when cause
        [:div
         [Exception cause]
@@ -110,7 +110,8 @@
 (defn ErrorCard [& contents]
   [:> mui/Card
    {:style {:background-color "#b71c1c" ; red 900
-            :color "#ffffff"}}
+            :color "#ffffff"
+            :min-width "400px"}}
    [:> mui/CardContent
     [:div
      {:style {:display :flex
